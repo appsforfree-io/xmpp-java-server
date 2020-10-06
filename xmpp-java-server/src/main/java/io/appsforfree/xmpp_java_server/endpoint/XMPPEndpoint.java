@@ -1,7 +1,9 @@
 package io.appsforfree.xmpp_java_server.endpoint;
 
 import java.io.IOException;
+import java.util.UUID;
 
+import javax.websocket.EncodeException;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -9,7 +11,11 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
-@ServerEndpoint(value = "/xmpp")
+import io.appsforfree.xmpp_java_server.common.domain.Stream;
+import io.appsforfree.xmpp_java_server.common.domain.decoder.StreamDecoder;
+import io.appsforfree.xmpp_java_server.common.domain.encoder.StreamEncoder;
+
+@ServerEndpoint(value = "/xmpp", decoders = StreamDecoder.class, encoders = StreamEncoder.class )
 public class XMPPEndpoint {
  
     @OnOpen
@@ -19,9 +25,15 @@ public class XMPPEndpoint {
     }
  
     @OnMessage
-    public void onMessage(Session session, String message) throws IOException {
-        // Handle new messages
-    	System.out.println("Message received : " + message);
+    public void handleStream(Stream stream, Session session) throws IOException {
+    	try {
+    		UUID uuid = UUID.randomUUID();
+    		stream.setId(uuid.toString());
+			session.getBasicRemote().sendObject(stream);
+		} catch (EncodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
  
     @OnClose
